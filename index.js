@@ -1,5 +1,4 @@
 let TelegramBot = require('node-telegram-bot-api');
-let moment = require('moment');
 
 let token = '407106962:AAH6F5mtJBygPsh1ns5Ek5nVV6I8wwIljnU';
 
@@ -13,12 +12,23 @@ var films = require('./films');
 
 var filmsdb = films.films;
 
-// 'Aug. 5, 1977'
 
-var today = moment(new Date()).format(' d  MMM  YYYY');
+var today = new Date();
+var dd = today.getDate();
+var ddTom = today.getDate()+1;
+var mm = today.getMonth()+1; //January is 0!
+var yyyy = today.getFullYear();
 
-let nowDate = new Date()
-let tomorrow = moment(nowDate.setDate(nowDate.getDate() + 1)).format(' d  MMM  YYYY');
+if(dd<10) {
+    dd = '0'+dd
+}
+
+if(mm<10) {
+    mm = '0'+mm
+}
+
+today =  dd + '/' +  mm + '/' + yyyy;
+let tomorrow =  ddTom + '/' +  mm + '/' + yyyy;
 
 var datesDb = [[today], [tomorrow]]
 
@@ -29,6 +39,8 @@ var state;
 var order = new Object();
 
 var chosenFilm;
+var times;
+var hallRows;
 
 bot.on('message', (msg) => {
     chatId = msg.chat.id;
@@ -39,9 +51,9 @@ bot.on('message', (msg) => {
 
     if (state == 'start') {
 
-        bot.sendMessage(chatId, "Привіт! Я бот що допоможе тобі " +
-            "зходити в кіно! Обери фільм на який ти хочеш " +
-            "придбати квиток", getFilmButtons());
+        bot.sendMessage(chatId, "Привіт! Я бот що допоможе тобі  " +
+            "замовити квиток в кіно ! Обери фільм який ти хочеш " +
+            "переглянути", getFilmButtons());
 
         state = 'date';
 
@@ -52,34 +64,77 @@ bot.on('message', (msg) => {
         chosenFilm = tickets.filter(filmD => filmD.name === msg.text);
         console.log(chosenFilm);
 
-        bot.sendMessage(chatId, "оберіть дату сеансу", getDateButtons(datesDb));
+        bot.sendMessage(chatId, "Оберіть дату сеансу :", getDateButtons(datesDb));
         // console.dir(filmsdb)
         state = 'time';
     }
     else if (state == 'time') {
         order.data = msg.text;
-        console.log('Datas!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!' + msg.text);
         console.dir(order)
 
         console.log(chosenFilm);
-        let times = chosenFilm.filter(filmD => filmD.dates === ' ' + msg.text);
+        times = chosenFilm.filter(filmD => filmD.dates ===   msg.text);
         console.log('times' + times)
 
-        bot.sendMessage(chatId, "оберіть час сеансу", getTimeButtons(times))
+        bot.sendMessage(chatId, "Оберіть час сеансу :", getTimeButtons(times))
 
+        state = 'row'
+    }
+    else if (state == 'row') {
+        order.time = msg.text;
+
+        let rows = times.filter(filmD => filmD.times === msg.text);
+
+        console.dir(order)
+        bot.sendMessage(chatId, "Оберіть ряд :", getRowButtons(rows))
+        // console.dir(filmsdb)
         state = 'seat'
     }
     else if (state == 'seat') {
-        order.data = msg.text;
+        order.row = msg.text;
+        let number = msg.text
+        console.log(number)
+        let allowed = [number];
+
+        let seats = hallRows[0]['row' + msg.text]
+
         console.dir(order)
-        bot.sendMessage(chatId, "оберіть час сеансу", getTimeButtons(chosenFilm))
-        // console.dir(filmsdb)
-        state = 'seat'
+        bot.sendMessage(chatId, "Оберіть місце :", getSeatsButtons(seats))
+
+        state = 'confirmation'
+    }
+    else if (state == 'confirmation') {
+        order.seat = msg.text;
+
+        console.dir(order)
+        bot.sendMessage(chatId,
+            `Ви вибрали фільм ${order.film} 
+             на ${order.data} ${order.time}  
+             ${order.row} ряд ${order.seat}  місце`,
+            setConfirmation()
+        )
+
+        state = 'orderedTicket'
     }
 
 
 });
 
+
+function getDateButtons(datesDb) {
+    let list = datesDb;
+
+    console.log(datesDb)
+
+    var opt = {
+        reply_markup: JSON.stringify({
+            keyboard: list
+
+        })
+    };
+    return opt;
+
+}
 
 function getTimeButtons(times) {
     let filmTimes = times.map((film) => {
@@ -98,21 +153,24 @@ function getTimeButtons(times) {
     return opt;
 }
 
-function getDateButtons(datesDb) {
-    let list = datesDb;
+function getRowButtons(rows) {
+    hallRows = rows.map((hall) => {
+        return hall.hall ;
+    });
+    Object.keys(hallRows)
 
-    console.log(datesDb)
+    console.log(hallRows[0])
+    let arrHallRows = Object.keys(hallRows[0])
 
-    // console.log(filmDates.dates)
+    let numberOfRow = arrHallRows.map((hall) => {
+        return hall.slice(3) ;
+    });
+    console.log('numberOfRow ___________________________'+ numberOfRow)
 
-    // let md = new Date();
-    // md.setDate(md.getDate() + 1)
-    // list = [[new Date()], [md]]
+    console.log(Object.keys(hallRows[0]))
 
-    // for (let i = 0; i < filmsdb.length; i++) {
-    //     list[i] = [{text: filmsdb[i].name, callback_data: i.toString()}];
-    // }
-
+    let list = [numberOfRow];
+    console.log(list)
     var opt = {
         reply_markup: JSON.stringify({
             keyboard: list
@@ -120,8 +178,37 @@ function getDateButtons(datesDb) {
         })
     };
     return opt;
-
 }
+
+
+function getSeatsButtons(seats) {
+    console.log(seats)
+
+    let list = [seats];
+    console.log(list)
+    var opt = {
+        reply_markup: JSON.stringify({
+            keyboard: list
+
+        })
+    };
+    return opt;
+}
+function setConfirmation() {
+
+    let list = [['Підтвердити замовлення квитка']];
+    console.log(list)
+    var opt = {
+        reply_markup: JSON.stringify({
+            'keyboard': list,
+            'one_time_keyboard':true
+
+
+        })
+    };
+    return opt;
+}
+
 function getFilmButtons() {
     var list = [];
 

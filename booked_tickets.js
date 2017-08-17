@@ -1,84 +1,95 @@
-let moment = require('moment');
+var today = new Date();
+var dd = today.getDate();
+var ddTom = today.getDate()+1;
+var mm = today.getMonth()+1; //January is 0!
+var yyyy = today.getFullYear();
 
-var today = moment(new Date()).format(' d  MMM  YYYY');
+if(dd<10) {
+    dd = '0'+dd
+}
 
-let nowDate = new Date()
-let tomorrow = moment(nowDate.setDate(nowDate.getDate() + 1)).format(' d  MMM  YYYY');
+if(mm<10) {
+    mm = '0'+mm
+}
+
+today =  dd + '/' +  mm + '/' + yyyy;
+let tomorrow =  ddTom + '/' +  mm + '/' + yyyy;
 
 
 exports.booked_tickets = [
     {
         name: 'film1',
-        dates: today ,
+        dates: today,
+        times: '18:00',
+        hall: {
+            row1: ['1', '2', '5'],
+            row2: ['1', '2', '3', '4', '5'],
+            row3: ['1', '2', '3', '4', '5'],
+            row4: ['1', '2', '3', '4', '5'],
+            row5: ['1', '2', '3', '4', '5'],
+        }
+    },
+    {
+        name: "film1",
+        dates: tomorrow,
         times: '12:00',
-        seats: {
-            1: [1, 2, 3, 4, 5],
-            2: [1, 2, 3, 4, 5],
-            3: [1, 2, 3, 4, 5],
-            4: [1, 2, 3, 4, 5],
+        hall: {
+            row1: ['1', '2', '3', '4', '5'],
+            row2: ['1', '2', '3', '4', '5'],
+            row3: ['1', '2', '3', '4', '5'],
+            row4: ['1', '2', '3', '4', '5'],
         }
     },
     {
         name: "film1",
-        dates:  tomorrow ,
-        times: '12:00' ,
-        seats: {
-            1: [1, 2, 3, 4, 5],
-            2: [1, 2, 3, 4, 5],
-            3: [1, 2, 3, 4, 5],
-            4: [1, 2, 3, 4, 5],
-        }
-    },
-    {
-        name: "film1",
-        dates: today ,
-        times:  '20:00',
-        seats: {
-            1: [1, 2, 3, 4, 5],
-            2: [1, 2, 3, 4, 5],
-            3: [1, 2, 3, 4, 5],
-            4: [1, 2, 3, 4, 5],
-        }
-    },
-    {
-        name: "film1",
-        dates: tomorrow ,
+        dates: today,
         times: '20:00',
-        seats: {
-            1: [1, 2, 3, 4, 5],
-            2: [1, 2, 3, 4, 5],
-            3: [1, 2, 3, 4, 5],
-            4: [1, 2, 3, 4, 5],
+        hall: {
+            row1: ['1', '2', '3', '4', '5'],
+            row2: ['4', '5'],
+            row3: ['1', '2', '3', '4', '5'],
+            row4: ['1', '2', '3', '4', '5'],
+        }
+    },
+    {
+        name: "film1",
+        dates: tomorrow,
+        times: '20:00',
+        hall: {
+            row1: ['1', '2', '3', '4', '5'],
+            row2: ['1', '2', '3', '4', '5'],
+            row3: ['1', '2', '3', '4', '5'],
+            row4: ['1', '2', '3', '4', '5'],
         }
     },
     {
         name: "film2",
-        dates:  tomorrow ,
+        dates: tomorrow,
         times: '10:00',
-        seats: {
-            1: [1, 2, 3, 4, 5],
-            2: [1, 2, 3, 4, 5],
-            3: [1, 2, 3, 4, 5],
-            4: [1, 2, 3, 4, 5],
+        hall: {
+            row1: ['1', '2', '3', '4', '5'],
+            row2: ['1', '2', '3', '4', '5'],
+            row3: ['1', '2', '3', '4', '5'],
+            row4: ['1', '2', '3', '4', '5'],
         }
     }/*,
-    {
-        name: "film2",
-        dates: [today, tomorrow],
-        times: ['10:00', '18:00']
-    },
-    {
-        name: "film3",
-        dates: [today, tomorrow],
-        times: ['14:00', '22:00']
-    },
-    {
-        name: "film4",
-        dates: [today, tomorrow],
-        times: ['16:00', '23:50']
-    },
-    {
-        name: "film5",
-        dates: [today, tomorrow],
-        times: ['08:00']
-    }*/];
+     {
+     name: "film2",
+     dates: [today, tomorrow],
+     times: ['10:00', '18:00']
+     },
+     {
+     name: "film3",
+     dates: [today, tomorrow],
+     times: ['14:00', '22:00']
+     },
+     {
+     name: "film4",
+     dates: [today, tomorrow],
+     times: ['16:00', '23:50']
+     },
+     {
+     name: "film5",
+     dates: [today, tomorrow],
+     times: ['08:00']
+     }*/];
