@@ -41,6 +41,10 @@ var order = new Object();
 var chosenFilm;
 var times;
 var hallRows;
+let numberOfTickets;
+let numberOfTickets2;
+order.rows = []
+order.seats = []
 
 bot.on('message', (msg) => {
     chatId = msg.chat.id;
@@ -77,29 +81,53 @@ bot.on('message', (msg) => {
         console.log('times' + times)
 
         bot.sendMessage(chatId, "Оберіть час сеансу :", getTimeButtons(times))
+        state = 'numberOfTickets'
+    }
+    else if (state == 'numberOfTickets') {
+        order.time = msg.text;
+        bot.sendMessage(chatId, "Оберіть кількість білетів для замовлення :", {
+            reply_markup: JSON.stringify({
+                keyboard: [['1 квиток', '2 квитка', '3 квитка',], ['4 квитка']],
+                resize_keyboard: true
+            })
+        });
+
         state = 'row'
     }
     else if (state == 'row') {
-        order.time = msg.text;
 
-        let rows = times.filter(filmD => filmD.times === msg.text);
+        numberOfTickets = msg.text;
+        if (numberOfTickets.length == 1) {
+            order.seats.push(msg.text)
+        } else getnumberOfTickets(numberOfTickets)
+
+
+        console.log('************************************** : ' + numberOfTickets)
+
+        let rows = times.filter(filmD => filmD.times === order.time);
 
         console.dir(order)
         bot.sendMessage(chatId, "Оберіть ряд :", getRowButtons(rows));
         state = 'seat'
     }
     else if (state == 'seat') {
-        order.row = msg.text;
+        order.rows.push(msg.text)
 
         let seats = hallRows[0]['row' + msg.text]
 
         console.dir(order)
         bot.sendMessage(chatId, "Оберіть місце :", getSeatsButtons(seats))
 
-        state = 'confirmation'
+        console.log('7777777777777777777777777777 ' + numberOfTickets2)
+        if (order.rows.length == numberOfTickets2) {
+            state = 'confirmation'
+        }
+        else   state = 'row'
     }
     else if (state == 'confirmation') {
-        order.seat = msg.text;
+        order.seats.push(msg.text)
+
+        //order.seat = msg.text;
 
         console.dir(order)
         bot.sendMessage(chatId,
@@ -109,7 +137,19 @@ bot.on('message', (msg) => {
 
         state = 'orderedTicket'
     }
+    else if (state == 'orderedTicket') {
+        if ( msg.text == 'Ні') {
+            order.seats = []
+            order.rows = []
+        } else console.log('Send to serwer')
+
+    }
 });
+function getnumberOfTickets(tickets) {
+    console.log('000000000000000000wwwwwwwwwwwww00 ' + tickets.slice(0, -7))
+
+    numberOfTickets2 = tickets.slice(0, -7)
+}
 
 function getDateButtons(datesDb) {
     let list = datesDb;
@@ -136,7 +176,8 @@ function getTimeButtons(times) {
 
     var opt = {
         reply_markup: JSON.stringify({
-            keyboard: list
+            keyboard: list,
+            resize_keyboard: true
 
         })
     };
