@@ -17,6 +17,10 @@ var filmsDb
 /* = films.films;*/
 var FILMSMOCk = films.films;
 
+let numberOfRow
+let filteredRows
+
+
 var tickets
 /*= booked_tickets.booked_tickets;*/
 
@@ -60,7 +64,6 @@ bot.on('message', (msg) => {
 
         if (msg.text == '/start') {
             state = 'start';
-
         }
 
         if (msg.text == '/help')
@@ -94,9 +97,9 @@ bot.on('message', (msg) => {
             getFilmButtons((err, buttons) => {
                 if (err) console.error(err);
 
-                bot.sendMessage(chatId, 'Привіт! Я бот який допоможе тобі  ' +
+                bot.sendMessage(chatId, 'Привіт! Я бот, який допоможе тобі  ' +
                     'замовити квиток в кіно ! Обери фільм який ти хочеш ' +
-                    'переглянути', buttons);
+                    'переглянути :', buttons);
 
                 state = 'date';
             })
@@ -110,7 +113,7 @@ bot.on('message', (msg) => {
                 chosenFilm = filmsSeances.filter(filmD => filmD.name === msg.text);
                 let filmDescription = FILMSMOCk.find(film => film.name === msg.text);
                 console.log('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%' + chosenFilm);
-                bot.sendMessage(chatId, 'Опис фільму ' + filmDescription.name,
+                bot.sendMessage(chatId, 'Опис фільму :' + filmDescription.name,
                     {
                         reply_markup: {
                             inline_keyboard: [[{
@@ -154,7 +157,9 @@ bot.on('message', (msg) => {
             state = 'numberOfTickets'
         }
         else if (state == 'numberOfTickets') {
-            order.time = msg.text;
+            if (order.time === undefined)
+                order.time = msg.text;
+
             bot.sendMessage(chatId, 'Оберіть кількість білетів для замовлення :', {
                 reply_markup: JSON.stringify({
                     keyboard: [['1 квиток', '2 квитка', '3 квитка', '4 квитка']],
@@ -165,6 +170,11 @@ bot.on('message', (msg) => {
             state = 'row'
         }
         else if (state == 'row') {
+            if (parseInt(msg.text) < 1 || parseInt(msg.text) > 10 || isNaN(parseInt(msg.text))) {
+                state = 'numberOfTickets'
+                bot.sendMessage(chatId, "будь ласка використовуйте клавіатуру")
+            }
+
 
             numberOfTickets = msg.text;
             if (numberOfTickets.length == 1) {
@@ -224,22 +234,38 @@ bot.on('message', (msg) => {
                 order.rows = []
 
                 bot.sendMessage(chatId, 'Замовлення відмінено  \n ' +
-                    'Щоб замовити квитки введіть команду /start', {
+                    'Щоб замовити квитки, введіть команду /start', {
                     reply_markup: {
                         remove_keyboard: true
                     },
                 });
 
             } else if (msg.text == 'Так') {
+
+
+                /*               var arr =  seats
+                 var arr1 = order.seats
+                 var filteredSeats = arr.filter(function (e) {
+                 return this.indexOf(e) < 0;
+                 }, arr1);*/
+
+       /*         var arr = numberOfRow
+                var arr1 = order.rows
+                filteredRows = arr.filter(function (e) {
+                    return this.indexOf(e) < 0;
+                }, arr1);*/
+
+
                 console.log('Send to serwer')
-                order.seats = []
-                order.rows = []
+                console.log('Send to serwer!!!!!!!!!!!!!!!!!!!!!!!!!!!!'+ filteredRows)
+                       order.seats = []
+                 order.rows = []
                 bot.sendMessage(chatId, 'Замовлення підтверджено  \n ', {
                     reply_markup: {
                         remove_keyboard: true
                     },
                 });
-                bot.sendMessage(chatId, 'Ви замовили такі білети : \n  ТРАТАТАТАТА', {
+                bot.sendMessage(chatId, 'Ви замовили такі білети : \n ', {
                     reply_markup: {
                         inline_keyboard: [[{
                             text: 'Перейти до сайту',
@@ -249,7 +275,6 @@ bot.on('message', (msg) => {
                 });
 
             }
-
         }
     }
 );
@@ -302,7 +327,7 @@ function getRowButtons(rows) {
     console.log(hallRows[0])
     let arrHallRows = Object.keys(hallRows[0])
 
-    let numberOfRow = arrHallRows.map((hall) => {
+    numberOfRow = arrHallRows.map((hall) => {
         return hall.slice(3);
     });
 
@@ -322,7 +347,16 @@ function getRowButtons(rows) {
 function getSeatsButtons(seats) {
     console.log(seats)
 
-    let list = [seats];
+    var arr = seats
+    var arr1 = order.seats
+    var filteredSeats = arr.filter(function (e) {
+        return this.indexOf(e) < 0;
+    }, arr1);
+
+    console.log('$4444444444444444444444$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ ' + filteredSeats)
+
+
+    let list = [filteredSeats];
     console.log(list)
     var opt = {
         reply_markup: JSON.stringify({
@@ -403,7 +437,7 @@ function getSeancesFilms(callback) {
 function getFilmButtons(callback) {
     return getFilmFromDb({}, (films) => {
         filmsDb = films.filmsDB
-        console.log('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ ' + filmsDb)
+        console.log('  ' + filmsDb)
         let filmsNamesButtons = filmsDb.map((film) => {
             return [film.name];
         });
@@ -421,21 +455,6 @@ function getFilmButtons(callback) {
     });
 }
 
-
-/*let filmsNamesButtons = FILMSMOCk.map((film) => {
- return [film.name];
- });
-
- console.log( filmsNamesButtons );
- var list =  filmsNamesButtons ;
-
- var opt = {
- reply_markup: JSON.stringify({
- keyboard: list
-
- })
- };
- return opt;*/
 
 
 
