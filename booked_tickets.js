@@ -17,10 +17,6 @@ let '20/08/17' = ddTom + '/' + mm + '/' + yyyy;*/
 
 exports.booked_tickets = [
 
-
-
-
-
     {   id : 1111,
         name: 'Лоґан: Росомаха / Logan',
         dates: '19/08/17',

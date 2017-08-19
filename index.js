@@ -13,7 +13,12 @@ var booked_tickets = require('./booked_tickets');
 
 var films = require('./films');
 
-var filmsDb = films.films;
+var filmsDb
+/* = films.films;*/
+var FILMSMOCk = films.films;
+
+var tickets
+/*= booked_tickets.booked_tickets;*/
 
 let filmsDB
 var collection
@@ -37,7 +42,6 @@ var collection
 
 var datesDb = [['19/08/17'], ['20/08/17']];
 
-var tickets = booked_tickets.booked_tickets;
 
 var state;
 
@@ -87,32 +91,56 @@ bot.on('message', (msg) => {
         if (state == 'start') {
             order.seats = []
             order.rows = []
+            getFilmButtons((err, buttons) => {
+                if (err) console.error(err);
 
-            bot.sendMessage(chatId, 'Привіт! Я бот який допоможе тобі  ' +
-                'замовити квиток в кіно ! Обери фільм який ти хочеш ' +
-                'переглянути', getFilmButtons());
+                bot.sendMessage(chatId, 'Привіт! Я бот який допоможе тобі  ' +
+                    'замовити квиток в кіно ! Обери фільм який ти хочеш ' +
+                    'переглянути', buttons);
 
-            state = 'date';
+                state = 'date';
+            })
+
 
         }
         else if (state == 'date') {
 
-            order.name = msg.text;
-            chosenFilm = tickets.filter(filmD => filmD.name === msg.text);
-            let filmDescription = filmsDb.find(film => film.name === msg.text);
-            console.log('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%' + chosenFilm);
-            bot.sendMessage(chatId, 'Опис фільму ' + filmDescription.name,
-                {
-                    reply_markup: {
-                        inline_keyboard: [[{
-                            text: 'Перейти до опису',
-                            url: filmDescription.description,
-                        }]],
-                    },
-                })
-            bot.sendMessage(chatId, 'Оберіть дату сеансу :', getDateButtons(datesDb));
-            // console.dir(filmsDb)
-            state = 'time';
+            getSeancesFilms((err, filmsSeances) => {
+                order.name = msg.text;
+                chosenFilm = filmsSeances.filter(filmD => filmD.name === msg.text);
+                let filmDescription = FILMSMOCk.find(film => film.name === msg.text);
+                console.log('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%' + chosenFilm);
+                bot.sendMessage(chatId, 'Опис фільму ' + filmDescription.name,
+                    {
+                        reply_markup: {
+                            inline_keyboard: [[{
+                                text: 'Перейти до опису',
+                                url: filmDescription.description,
+                            }]],
+                        },
+                    })
+                bot.sendMessage(chatId, 'Оберіть дату сеансу :', getDateButtons(datesDb));
+                // console.dir(filmsDb)
+                state = 'time';
+            })
+
+
+            /*order.name = msg.text;
+             chosenFilm = tickets.filter(filmD => filmD.name === msg.text);
+             let filmDescription = FILMSMOCk.find(film => film.name === msg.text);
+             console.log('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%' + chosenFilm);
+             bot.sendMessage(chatId, 'Опис фільму ' + filmDescription.name,
+             {
+             reply_markup: {
+             inline_keyboard: [[{
+             text: 'Перейти до опису',
+             url: filmDescription.description,
+             }]],
+             },
+             })
+             bot.sendMessage(chatId, 'Оберіть дату сеансу :', getDateButtons(datesDb));
+             // console.dir(filmsDb)
+             state = 'time';*/
         }
         else if (state == 'time') {
             order.data = msg.text;
@@ -320,41 +348,94 @@ function setConfirmation() {
     return opt;
 }
 
+/*
+ let getAllContent = function () {
+ MongoClient.connect(dbConfig)
+ .then(function (db) { // <- db as first argument
+ console.log('YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY' + db)
+ return db.collection('films')
+ }).then((users) => {
+ return users.insert(object)
+ })
+ .catch(function (err) {
+ })
 
-function getFilmbDb() {
+ }*/
+
+function getFilmFromDb(order = {}, callback) {
     MongoClient.connect(dbConfig, function (err, db) {
         assert.equal(null, err);
-        console.log("Connected correctly to server");
-        console.log('Підключився до БД')
 
         collection = db.collection('films');
-        collection.find({
-            name: order.name
-        }).toArray(function (err, docs) {
-            filmsDB = docs[0]
+        collection.find(order).toArray(function (err, docs) {
+            let filmsDB = docs[0]
             /*-----------------------------------------------------------------------------------------------*/
-            console.log('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@' + filmsDB.filmsDB)
-            console.log('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@' + filmsDb)
-
-        });
-
+            console.log('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ ' + filmsDB.filmsDB[0].name)
+            callback(filmsDB);
+        })
         db.close();
     });
-    return filmsDB
 }
-function getFilmButtons( ) {
+function getSeancesFromDb(order = {}, callback) {
+    MongoClient.connect(dbConfig, function (err, db) {
+        assert.equal(null, err);
 
-    let filmsNamesButtons = filmsDb.map((film) => {
-        return [film.name];
-    });
-    console.log(filmsNamesButtons);
-    var list = filmsNamesButtons;
-
-    var opt = {
-        reply_markup: JSON.stringify({
-            keyboard: list
-
+        collection = db.collection('seances');
+        collection.find(order).toArray(function (err, docs) {
+            let seancesDb = docs[0]
+            /*-----------------------------------------------------------------------------------------------*/
+            console.log('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! ' + seancesDb.seances)
+            callback(seancesDb);
         })
-    };
-    return opt;
+        db.close();
+    });
 }
+
+function getSeancesFilms(callback) {
+    return getSeancesFromDb({}, (films) => {
+        filmsDb = films.seances
+        console.log('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ ' + filmsDb)
+
+        callback(null, filmsDb);
+    });
+}
+
+function getFilmButtons(callback) {
+    return getFilmFromDb({}, (films) => {
+        filmsDb = films.filmsDB
+        console.log('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ ' + filmsDb)
+        let filmsNamesButtons = filmsDb.map((film) => {
+            return [film.name];
+        });
+
+        console.log(filmsNamesButtons);
+        var list = filmsNamesButtons;
+
+        var opt = {
+            reply_markup: JSON.stringify({
+                keyboard: list
+
+            })
+        };
+        callback(null, opt);
+    });
+}
+
+
+/*let filmsNamesButtons = FILMSMOCk.map((film) => {
+ return [film.name];
+ });
+
+ console.log( filmsNamesButtons );
+ var list =  filmsNamesButtons ;
+
+ var opt = {
+ reply_markup: JSON.stringify({
+ keyboard: list
+
+ })
+ };
+ return opt;*/
+
+
+
